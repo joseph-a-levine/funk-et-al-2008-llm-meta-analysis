@@ -20,8 +20,8 @@ import time
 
 import dotenv
 import yaml
-from langchain.chat_models import ChatOpenAI
-from langchain.vectorstores import Chroma
+from langchain_community.chat_models import ChatOpenAI
+from langchain_community.vectorstores import Chroma
 from metaflow import FlowSpec, JSONType, Parameter, current, step
 
 import common as cm
@@ -98,10 +98,12 @@ class AnalyzePapersFlow(FlowSpec):
     db_path = Parameter("db-path", default="data/funk-etal-2008.db")
     vector_db_path = Parameter("vector-db-path", default="data/funk-etal-2008.chromadb")
     tree_path = Parameter("tree-path", default="data/decision-tree.yaml")
-    embeddings_model = Parameter(
-        "embeddings-model", default="jinaai/jina-embedding-l-en-v1"
+    embeddings_model = Parameter("embeddings-model", default="openai")
+    dois = Parameter(
+        "dois",
+        default=["10.1002/ece3.6938", "10.1007/s10530-017-1586-y"],
+        type=JSONType,
     )
-    dois = Parameter("dois", default=None, type=JSONType)
     papers_collection = Parameter("papers-collection", default="funk-etal-2008-meta")
     model = Parameter("model", default="gpt-3.5-turbo")
     max_paper_tokens = Parameter("num-tokens", default=1200, type=int)

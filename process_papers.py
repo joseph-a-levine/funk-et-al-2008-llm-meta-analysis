@@ -263,6 +263,11 @@ class ProcessPapersFlow(FlowSpec):
     @step
     def run_grobid(self):
         """Run GROBID academic PDF->XML parser."""
+        if self.skip_grobid:
+            print("Skipping Grobid parsing.")
+            self.next(self.process_xml)
+            return  # Stop further execution of this step if skipping
+
         db = sqlite3.connect(self.db_path)
 
         self.pdf_dois = pd.read_sql(

@@ -7,10 +7,8 @@ import bs4
 import numpy as np
 import pandas as pd
 import tiktoken
-from langchain.embeddings import (
-    HuggingFaceBgeEmbeddings,
+from langchain_community.embeddings import (
     HuggingFaceEmbeddings,
-    HuggingFaceInstructEmbeddings,
     OpenAIEmbeddings,
 )
 from lxml import etree
@@ -93,37 +91,60 @@ def search_db(db, doi, query, k=10, min_tokens=10, min_score=1e9):
     return _df.query("score <= @min_score").loc[:, ["global_ordinal", "score"]]
 
 
+# def load_embeddings_model(embeddings_model, query_instruction=""):
+#     """Load a provided embeddings model."""
+#     model_kwargs = {"device": "cpu"}
+#     encode_kwargs = {"normalize_embeddings": True}
+
+#     if embeddings_model == "openai":
+#         embeddings = OpenAIEmbeddings()
+#     elif "BAAI" in embeddings_model:
+#         embeddings = HuggingFaceBgeEmbeddings(
+#             model_name=embeddings_model,
+#             model_kwargs=model_kwargs,
+#             encode_kwargs=encode_kwargs,
+#             query_instruction=query_instruction,
+#         )
+#     else:
+#         try:
+#             embeddings = HuggingFaceInstructEmbeddings(
+#                 model_name=embeddings_model,
+#                 model_kwargs=model_kwargs,
+#                 encode_kwargs=encode_kwargs,
+#                 query_instruction=query_instruction,
+#             )
+#             logger.debug(
+#                 "Failed Instruct import, moving on to generic embeddings import."
+#             )
+#         except ImportError:
+#             embeddings = HuggingFaceEmbeddings(
+#                 model_name=embeddings_model,
+#                 model_kwargs=model_kwargs,
+#                 encode_kwargs=encode_kwargs,
+#             )
+
+#     return embeddings
+
+
 def load_embeddings_model(embeddings_model, query_instruction=""):
     """Load a provided embeddings model."""
-    model_kwargs = {"device": "cuda"}
-    encode_kwargs = {"normalize_embeddings": True}
+    model_kwargs = {"device": "cpu"}  # Set device, can change to GPU if needed
 
+    # OpenAI embeddings
     if embeddings_model == "openai":
+        # Use OpenAIEmbeddings from Langchain
         embeddings = OpenAIEmbeddings()
-    elif "BAAI" in embeddings_model:
-        embeddings = HuggingFaceBgeEmbeddings(
-            model_name=embeddings_model,
-            model_kwargs=model_kwargs,
-            encode_kwargs=encode_kwargs,
-            query_instruction=query_instruction,
-        )
+    # Remove BAAI-specific logic if not needed
     else:
         try:
-            embeddings = HuggingFaceInstructEmbeddings(
-                model_name=embeddings_model,
-                model_kwargs=model_kwargs,
-                encode_kwargs=encode_kwargs,
-                query_instruction=query_instruction,
-            )
-            logger.debug(
-                "Failed Instruct import, moving on to generic embeddings import."
-            )
-        except ImportError:
+            # Use HuggingFace embeddings for non-OpenAI models
             embeddings = HuggingFaceEmbeddings(
-                model_name=embeddings_model,
-                model_kwargs=model_kwargs,
-                encode_kwargs=encode_kwargs,
+                model_name=embeddings_model, model_kwargs=model_kwargs
             )
+        except ImportError as err:
+            raise ValueError(
+                f"Embeddings model {embeddings_model} not supported or failed to load."
+            ) from err
 
     return embeddings
 
